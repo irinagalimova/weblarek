@@ -1,19 +1,18 @@
-import { Api } from "../base/Api.js";
 import {
-  IProduct,
+  IApi,
   IProductsResponse,
   IOrderData,
   IOrderResponse,
 } from "../../types/index.js";
 
 export class AppApi {
-  constructor(private api: Api) {}
+  constructor(private api: IApi) {}
 
   getProducts(): Promise<IProductsResponse> {
-    return this.api.get("/product") as Promise<IProductsResponse>;
+    return this.api.get<IProductsResponse>("/product");
   }
 
   postOrder(data: IOrderData): Promise<IOrderResponse> {
-    return this.api.post("/order", data) as Promise<IOrderResponse>;
+    return this.api.post<IOrderResponse>("/order", data);
   }
 }

@@ -1,4 +1,5 @@
 import { IBuyer } from "../../types/index.js";
+import { IValidationErrors } from "../../types/index.js";
 
 export class Buyer {
   private payment: IBuyer["payment"] | null = null;
@@ -23,10 +24,6 @@ export class Buyer {
   }
 
   getData(): IBuyer {
-    if (!this.payment) {
-      throw Error("Выберите тип оплаты");
-    }
-
     return {
       payment: this.payment,
       address: this.address,
@@ -42,18 +39,9 @@ export class Buyer {
     this.phone = "";
   }
 
-  validate(): {
-    payment?: string;
-    address?: string;
-    email?: string;
-    phone?: string;
-  } {
-    const errors: {
-      payment?: string;
-      address?: string;
-      email?: string;
-      phone?: string;
-    } = {};
+  validate(): IValidationErrors {
+    
+    const errors: IValidationErrors = {};
 
     if (!this.payment) {
       errors.payment = "Выберите тип оплаты";

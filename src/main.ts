@@ -8,26 +8,25 @@ const api = new Api(API_URL);
 const appApi = new AppApi(api);
 const productsModel = new Products();
 
-/** ТЕСТЫ 
- * import { ShoppingCart } from "./components/Models/ShoppingCart.js";
+/** ТЕСТЫ */
+import { ShoppingCart } from "./components/Models/ShoppingCart.js";
 import { Buyer } from "./components/Models/Buyer.js";
 import { apiProducts } from "./utils/data.js";
 
-const products = new Products(); 
 const shoppingCart = new ShoppingCart(); 
 const buyer = new Buyer();
 
 console.log('КАТАЛОГ');
 console.log('Проверка методов setItems() и getItems()');
-products.setItems(apiProducts.items);
-console.log(products.getItems());
+productsModel.setItems(apiProducts.items);
+console.log(productsModel.getItems());
 
 console.log('Проверка метода getProductByID()');
-console.log(products.getProductByID(apiProducts.items[2].id)); 
+console.log(productsModel.getProductByID(apiProducts.items[2].id)); 
 
 console.log('Проверка методов setSelectedProduct() и getSelectedProduct()');
-products.setSelectedProduct(apiProducts.items[1]);
-console.log(products.getSelectedProduct());
+productsModel.setSelectedProduct(apiProducts.items[1]);
+console.log(productsModel.getSelectedProduct());
 
 console.log('КОРЗИНА');
 console.log('Проверка метода getItems()');
@@ -69,7 +68,7 @@ buyer.setPhone('89777746556');
 buyer.setPayment('card');
 buyer.setEmail('murmeow@gmail.com');
 console.log('validate():', buyer.validate());
-*/
+
 
 console.log("КАТАЛОГ");
 console.log("Проверка методов getProducts()");
