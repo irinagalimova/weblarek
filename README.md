@@ -214,7 +214,37 @@ appApi.getProducts()
 
 ## Слой представления (View)
 
-Все классы используют render(data) из Component.  Он передаёт данные в сеттеры и возвращает контейнер. Без аргументов render() возвращает ту же разметку.
+Все классы используют `render(data?: Partial<T>): HTMLElement` из `Component<T>`. Он передаёт данные в сеттеры и возвращает контейнер. Без аргументов `render()` возвращает ту же разметку.
+
+Все компоненты наследуют `protected readonly container: HTMLElement` и метод `protected setImage(element: HTMLImageElement, src: string, alt?: string): void`. DOM-поля, перечисленные ниже, имеют доступ `protected`. Сеттеры принимают указанное значение и обновляют разметку, возвращаемого значения у них нет.
+
+В конструкторах `container` — корневой DOM-элемент компонента, у форм — `HTMLFormElement`. `events` — брокер событий. Конструкторы находят нужные элементы внутри контейнера и добавляют обработчики. Необязательный `actions: ICardActions` задаёт обработчик клика карточки, отдельным полем класса он не сохраняется.
+
+Типы представления объявлены в файлах соответствующих классов:
+
+```ts
+interface IHeader { counter: number; }
+interface IGallery { catalog: HTMLElement[]; }
+interface ICard { title: string; price: number | null; }
+interface ICardActions { onClick: (event: MouseEvent) => void; }
+interface ICardCatalog extends ICard { image: string; category: string; }
+interface ICardPreview extends ICard {
+  image: string;
+  category: string;
+  description: string;
+  buttonText: string;
+  buttonDisabled: boolean;
+}
+interface ICardBasket extends ICard { index: number; }
+interface IBasket { items: HTMLElement[]; total: number; buttonDisabled: boolean; }
+interface IModal { content: HTMLElement; }
+interface IForm { valid: boolean; errors: string; }
+interface IOrder extends IForm { payment: TPayment | null; address: string; }
+interface IContacts extends IForm { email: string; phone: string; }
+interface ISuccess { total: number; }
+```
+
+`Card<T extends ICard>` и `Form<T extends IForm>` — обобщённые классы, остальные компоненты используют свой интерфейс данных.
 
 ### Header
 
@@ -224,8 +254,10 @@ appApi.getProducts()
 
 Поля:
 
+- `protected events: IEvents` - брокер событий;
+
 - `counterElement: HTMLElement` - элемент, отображающий количество товаров в корзине;
-- `basketButton: HTMLButtonElement` - кнопка, по нажатию на которую создаётся событие открытия корзины.;
+- `basketButton: HTMLButtonElement` - кнопка, по нажатию на которую создаётся событие открытия корзины;
 Интерфейс IHeader:
 
 - `counter: number` - количество товаров в корзине;
@@ -236,13 +268,17 @@ appApi.getProducts()
 
 ### Gallery
 
-Каталог карточек на главной странице.
+Конструктор: `constructor(container: HTMLElement)`.
+
+Каталог карточек на главной странице. Собственных полей нет, используется контейнер из `Component`.
 
 Методы класса:
 
 - `set catalog(items: HTMLElement[])` - заменяет содержимое галереи переданными карточками;
 
 ### Card 
+
+Конструктор: `constructor(container: HTMLElement)`.
 
 Родительский класс для трех карточек: CardCatalog, CardPreview, CardBasket. В этот класс вынесен общий для всех дочерних классов функционал: содержит название и цену. 
 
@@ -258,6 +294,8 @@ appApi.getProducts()
 
 
 ### CardCatalog
+
+Конструктор: `constructor(container: HTMLElement, actions?: ICardActions)`.
 
 Карточка товара в каталоге.
 
@@ -277,6 +315,8 @@ appApi.getProducts()
 Клик по карточке вызывает actions.onClick. В Презентере этот обработчик генерирует card:select.
 
 ### CardPreview
+
+Конструктор: `constructor(container: HTMLElement, actions?: ICardActions)`.
 
 Карточка товара с описанием, которая открывается при клике на карточку в каталоге.
 
@@ -302,6 +342,8 @@ appApi.getProducts()
 
 ### CardBasket
 
+Конструктор: `constructor(container: HTMLElement, actions?: ICardActions)`.
+
 Карточка товара в корзине.
 
 Поля:
@@ -312,19 +354,23 @@ appApi.getProducts()
 Методы класса:
 
 - `set index(value: number)` - устанавливает номер строки в корзине;
-Поля названия и цены, сеттер цены наследуются от Card.
+Поля названия и цены, сеттеры названия и цены наследуются от Card.
 
 Кнопка удаления вызывает `actions.onClick`. Презентер передаёт обработчик события `basket:delete` с id товара.
 
 ### Basket
 
+Конструктор: `constructor(events: IEvents, container: HTMLElement)`.
+
 Корзина товаров.
 
 Поля:
 
+- `protected events: IEvents` - брокер событий;
+
 - `listElement: HTMLElement` - список, в который вставляются карточки товаров;
 - `totalElement: HTMLElement` - элемент с общей стоимостью товаров в корзине;
-- `orderButton: HTMLButtonElement` - конпка перехода к оформлению заказа;
+- `orderButton: HTMLButtonElement` - кнопка перехода к оформлению заказа;
 
 Методы класса:
 
@@ -336,9 +382,13 @@ appApi.getProducts()
 
 ### Modal
 
+Конструктор: `constructor(events: IEvents, container: HTMLElement)`.
+
 Оболочка модального окна, в нее вставляется контент из template. 
 
 Поля:
+
+- `protected events: IEvents` - брокер событий;
 
 - `closeButton: HTMLButtonElement` - кнопка закрытия модального окна;
 - `contentElement: HTMLElement` - элемент для содержимого модального окна;
@@ -353,9 +403,13 @@ appApi.getProducts()
 
 ### Form
 
-Родительский класс для двух карточек: Order, Contacts. В этот класс вынесен общий для всех дочерних классов функционал: кнопка отправки формы и элемент для сообщений об оибке. 
+Конструктор: `constructor(container: HTMLFormElement, events: IEvents)`.
+
+Родительский класс для двух форм: Order, Contacts. В этот класс вынесен общий для всех дочерних классов функционал: кнопка отправки формы и элемент для сообщений об ошибке. 
 
 Поля:
+
+- `protected events: IEvents` - брокер событий;
 
 - `submitButton: HTMLButtonElement` - кнопка отправки формы;
 - `errorsElement: HTMLElement` - элемент для сообщений об ошибках;
@@ -368,9 +422,13 @@ appApi.getProducts()
 
 ### Order 
 
+Конструктор: `constructor(container: HTMLFormElement, events: IEvents)`.
+
 Первая форма: оплата и адрес.
 
 Поля:
+
+- `protected events: IEvents` - брокер событий;
 
 - `cardButton: HTMLButtonElement` - кнопка выбора онлайн-оплаты;
 - `cashButton: HTMLButtonElement` - кнопка выбора оплаты при получении;
@@ -381,11 +439,17 @@ appApi.getProducts()
 - `set payment(value: TPayment | null)` - выделяет выбранный способ оплаты или снимает выделение;
 - `set address(value: string)` - устанавливает значение поля адреса;
 
+Сеттеры `valid` и `errors`, поля кнопки отправки и ошибок, обработчики ввода и отправки наследуются от `Form`. Кнопки оплаты вызывают `payment:change`.
+
 ### Contacts 
+
+Конструктор: `constructor(container: HTMLFormElement, events: IEvents)`.
 
 Вторая форма: почта и телефон. 
 
 Поля:
+
+- `protected events: IEvents` - брокер событий;
 
 - `emailInput: HTMLInputElement` - поле ввода почты покупателя;
 - `phoneInput: HTMLInputElement` - поле ввода телефона покупателя;
@@ -399,9 +463,13 @@ appApi.getProducts()
 
 ### Success 
 
+Конструктор: `constructor(events: IEvents, container: HTMLElement)`.
+
 Сообщение об успешном заказе.
 
 Поля:
+
+- `protected events: IEvents` - брокер событий;
 
 - `descriptionElement: HTMLElement` - элемент с сообщением о списанной сумме;
 - `closeButton: HTMLButtonElement` - кнопка, вызывающая событие завершения покупки;
@@ -432,11 +500,9 @@ appApi.getProducts()
 - `modal:close` — Клик по крестику или фону.
 - `success:close` — Кнопка на экране успеха.
 
-В `main.ts` также есть обработчик `modal:open`, но сейчас компоненты это событие не вызывают. При открытии экранов Презентер вызывает `modal.open()` напрямую.
-
 ## Презентер
 
-Написан в `src/main.ts`, отдельного класса нет. В начале создаются модели, брокер событий и компоненты, затем идут обработчики. После подписок выполняется запрос каталога.
+Написан в `src/main.ts`, отдельного класса нет. В начале создаются модели, брокер событий и компоненты. Затем запускается асинхронный запрос каталога и регистрируются обработчики событий. При получении ответа каталог сохраняется в модели.
 
 Вспомогательные функции:
 
@@ -448,12 +514,10 @@ appApi.getProducts()
 
 1. `appApi.getProducts()` получает товары, `productsModel.setItems()` сохраняет их. На `catalog:changed` создаются карточки и передаются в Gallery.
 2. Клик сохраняет выбранный товар в модели. На `product:changed` открывается подробная карточка. Презентер выбирает надпись кнопки: «Купить», «Удалить из корзины» или «Недоступно».
-3. `preview:submit` добавляет или удаляет выбранный товар и закрывает окно. Товар с ценой `null` купить нельзя.
+3. `preview:submit` добавляет или удаляет выбранный товар и закрывает окно. Для товара с ценой `null` Презентер отключает кнопку покупки в подробной карточке.
 4. `basket:changed` обновляет список, сумму и счётчик. Удаление через `basket:delete` оставляет корзину открытой. В пустой корзине оформление недоступно.
 5. Ввод в формах сохраняется методами Buyer. `buyer:changed` обновляет обе формы. На каждом шаге показываются только его ошибки.
-6. `order:submit` проверяет первый шаг и открывает Contacts. `contacts:submit` проверяет все поля и непустую корзину, собирает `IOrderData` и вызывает `appApi.postOrder()`.
-7. После успешного ответа очищаются корзина и покупатель, открывается Success с суммой из ответа. При ошибке данные остаются, сообщение выводится через `window.alert`, подробности — в консоль.
-
-Переменная `isOrderSending` не даёт отправить ещё один заказ, пока выполняется предыдущий запрос. В `finally` она возвращается в `false`.
+6. `order:submit` проверяет первый шаг и непустую корзину и открывает Contacts. `contacts:submit` проверяет все поля и отдельно проверяет, что оплата не `null`, собирает `IOrderData` и вызывает `appApi.postOrder()`.
+7. После успешного ответа очищаются корзина и покупатель, открывается Success с суммой из ответа. При ошибке данные остаются, ошибка выводится через `console.error`.
 
 После изменений моделей отображение обновляется в обработчиках их событий. Также данные передаются компонентам при открытии модального окна. Блокировку прокрутки страницы обеспечивает CSS-правило `.page:has(.modal_active)`.
