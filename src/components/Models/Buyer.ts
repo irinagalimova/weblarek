@@ -1,5 +1,6 @@
 import { IBuyer } from "../../types/index.js";
 import { IValidationErrors } from "../../types/index.js";
+import { IEvents } from "../base/Events.js";
 
 export class Buyer {
   private payment: IBuyer["payment"] | null = null;
@@ -7,20 +8,26 @@ export class Buyer {
   private email: IBuyer["email"] = "";
   private phone: IBuyer["phone"] = "";
 
+  constructor(private events: IEvents) {}
+
   setPayment(payment: IBuyer["payment"]): void {
     this.payment = payment;
+    this.events.emit("buyer:changed");
   }
 
   setAddress(address: IBuyer["address"]): void {
     this.address = address;
+    this.events.emit("buyer:changed");
   }
 
   setEmail(email: IBuyer["email"]): void {
     this.email = email;
+    this.events.emit("buyer:changed");
   }
 
   setPhone(phone: IBuyer["phone"]): void {
     this.phone = phone;
+    this.events.emit("buyer:changed");
   }
 
   getData(): IBuyer {
@@ -37,6 +44,7 @@ export class Buyer {
     this.address = "";
     this.email = "";
     this.phone = "";
+    this.events.emit("buyer:changed");
   }
 
   validate(): IValidationErrors {
