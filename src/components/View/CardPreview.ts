@@ -1,6 +1,7 @@
 import { categoryMap } from "../../utils/constants";
 import { ensureElement } from "../../utils/utils";
-import { Card, ICard, ICardActions } from "./Card";
+import { Card, ICard } from "./Card";
+import { IEvents } from "../base/Events";
 
 interface ICardPreview extends ICard {
   image: string;
@@ -16,7 +17,7 @@ export class CardPreview extends Card<ICardPreview> {
   protected descriptionElement: HTMLElement;
   protected buttonElement: HTMLButtonElement;
 
-  constructor(container: HTMLElement, actions?: ICardActions) {
+  constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
 
     this.imageElement = ensureElement<HTMLImageElement>(
@@ -36,9 +37,7 @@ export class CardPreview extends Card<ICardPreview> {
       this.container,
     );
 
-    if (actions?.onClick) {
-      this.buttonElement.addEventListener("click", actions.onClick);
-    }
+    this.buttonElement.addEventListener("click", () => this.events.emit("preview:submit"));
   }
 
   set title(value: string) {

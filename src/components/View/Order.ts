@@ -20,11 +20,11 @@ export class Order extends Form<IOrder> {
     super(container, events);
 
     this.cardButton = ensureElement<HTMLButtonElement>(
-      'button[name="card',
+      'button[name="card"]',
       this.container,
     );
     this.cashButton = ensureElement<HTMLButtonElement>(
-      'button[name="cash',
+      'button[name="cash"]',
       this.container,
     );
     this.addressInput = ensureElement<HTMLInputElement>(

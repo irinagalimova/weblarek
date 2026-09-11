@@ -38,13 +38,13 @@ const contacts = new Contacts(
   cloneTemplate<HTMLFormElement>("#contacts"),
   events,
 );
+const card = new CardPreview(cloneTemplate(cardPreviewTemplate), events);
 const success = new Success(events, cloneTemplate("#success"));
 
 appApi
   .getProducts()
   .then((data) => {
     productsModel.setItems(data.items);
-    console.log("Сервер подключен");
   })
   .catch((error) => {
     console.error("Ошибка загрузки с сервера", error);
@@ -87,10 +87,6 @@ events.on("product:changed", () => {
   } else if (shoppingCart.hasItem(item.id)) {
     buttonText = "Удалить из корзины";
   }
-
-  const card = new CardPreview(cloneTemplate(cardPreviewTemplate), {
-    onClick: () => events.emit("preview:submit"),
-  });
 
   modal.render({
     content: card.render({
@@ -151,16 +147,9 @@ events.on("basket:changed", () => {
 });
 
 events.on("basket:open", () => {
-  modal.render({
-    content: basket.render({
-      items: getBasketCards(),
-      total: shoppingCart.getTotalSum(),
-      buttonDisabled: shoppingCart.getAmountOfItem() === 0,
-    }),
-  });
-
+  modal.render({ content: basket.render() });
   modal.open();
-});
+}); 
 
 events.on("basket:delete", (data: { id: string }) => {
   shoppingCart.removeItem(data.id);
@@ -207,10 +196,6 @@ function updateContactsForm(): void {
 }
 
 events.on("order:open", () => {
-  if (shoppingCart.getAmountOfItem() === 0) {
-    return;
-  }
-
   updateOrderForm();
   modal.render({ content: order.render() });
   modal.open();
@@ -242,16 +227,6 @@ events.on("buyer:changed", () => {
 });
 
 events.on("order:submit", () => {
-   console.log("СРАБОТАЛ order:submit");
-  const errors = buyer.validate();
-  if (
-    errors.payment ||
-    errors.address ||
-    shoppingCart.getAmountOfItem() === 0
-  ) {
-    return;
-  }
-
   updateContactsForm();
   modal.render({ content: contacts.render() });
   modal.open();
@@ -259,11 +234,6 @@ events.on("order:submit", () => {
 
 events.on("contacts:submit", async () => {
   const data = buyer.getData();
-  const errors = buyer.validate();
-
-  if (errors.payment || errors.address || errors.email || errors.phone) {
-    return;
-  }
 
   if (data.payment === null) {
     return;
